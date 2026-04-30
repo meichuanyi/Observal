@@ -972,6 +972,10 @@ async def set_registered_agents_only(
         resource_id=str(org.id),
         detail=json.dumps({"enabled": enabled}),
     )
+    # Invalidate registry cache so all server instances pick up the change immediately
+    from services.agent_registry_cache import invalidate as invalidate_registry_cache
+
+    await invalidate_registry_cache()
     return {"registered_agents_only": org.registered_agents_only}
 
 

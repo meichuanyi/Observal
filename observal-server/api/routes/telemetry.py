@@ -885,6 +885,27 @@ async def ingest_hook(request: Request):
     if body.get("permission_mode"):
         attrs["permission_mode"] = body["permission_mode"]
 
+    # ── Registered-agents-only gate ──
+    # When enabled, strip content from unregistered agent spans (metadata-only storage).
+    from services.agent_registry_cache import is_registered, is_toggle_enabled, resolve_user_org
+
+    if user_id:
+        _org_id = await resolve_user_org(user_id)
+        if _org_id and is_toggle_enabled(_org_id):
+            _agent_name = attrs.get("agent_name", "")
+            if _agent_name:
+                if not is_registered(_org_id, _agent_name):
+                    attrs.pop("tool_input", None)
+                    attrs.pop("tool_response", None)
+                    attrs.pop("error", None)
+                    attrs["filtered"] = "unregistered_agent"
+            else:
+                # No agent identity — can't verify registration, filter conservatively
+                attrs.pop("tool_input", None)
+                attrs.pop("tool_response", None)
+                attrs.pop("error", None)
+                attrs["filtered"] = "unregistered_agent"
+
     # Build the Body as a readable summary
     agent_prefix = f"[{attrs.get('agent_type', '')}] " if attrs.get("agent_id") else ""
     if hook_event in ("PostToolUse", "PreToolUse"):
