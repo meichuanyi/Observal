@@ -1134,15 +1134,24 @@ def _install_kiro_hooks(server_url: str) -> tuple[list[str], bool]:
     registered_agents: set[str] = set()
     if registered_agents_only:
         registered_agents = obs_client.get_registered_agent_names()
+        # Filter agent files to only registered ones (skip silently)
+        eligible_files = [
+            af for af in agent_files if af.stem != "kiro_default" and af.stem in registered_agents
+        ]
+        if not eligible_files:
+            skipped_count = sum(1 for af in agent_files if af.stem != "kiro_default")
+            if skipped_count:
+                changes.append(
+                    f"[dim]  {skipped_count} unregistered agent(s) skipped. "
+                    "Register agents via [bold]observal agent create[/bold] to enable tracing.[/dim]"
+                )
+            return changes, changed
+        agent_files = eligible_files
 
     for af in agent_files:
         agent_name = af.stem
         # Skip kiro_default — only trace registered agents
         if agent_name == "kiro_default":
-            continue
-        # Skip unregistered agents when registered-agents-only mode is ON
-        if registered_agents_only and agent_name not in registered_agents:
-            changes.append(f"[dim]  {agent_name}: skipped (not registered)[/dim]")
             continue
         try:
             data = json.loads(af.read_text())
