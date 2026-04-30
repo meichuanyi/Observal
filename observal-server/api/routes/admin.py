@@ -911,7 +911,7 @@ async def set_trace_privacy(
 @router.get("/org/registered-agents-only")
 async def get_registered_agents_only(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.super_admin)),
+    current_user: User = Depends(require_role(UserRole.user)),
 ):
     """Get the registered-agents-only setting for the current user's organization."""
     if not current_user.org_id:
