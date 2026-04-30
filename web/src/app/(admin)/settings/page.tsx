@@ -5,9 +5,9 @@ import { Settings, Plus, Pencil, Trash2, Save, X, Loader2, Info, Database, Activ
 import { toast } from "sonner";
 import { useAdminSettings } from "@/hooks/use-api";
 import { useDeploymentConfig } from "@/hooks/use-deployment-config";
-import { useRoleGuard } from "@/hooks/use-role-guard";
+import { useRoleGuard, hasMinRole } from "@/hooks/use-role-guard";
 import type { AdminSetting } from "@/lib/types";
-import { admin } from "@/lib/api";
+import { admin, getUserRole } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -203,10 +203,14 @@ export default function SettingsPage() {
       .then((res) => setTracePrivacy(res.trace_privacy))
       .catch(() => {})
       .finally(() => setTracePrivacyLoading(false));
-    admin.getRegisteredAgentsOnly()
-      .then((res) => setRegisteredAgentsOnly(res.registered_agents_only))
-      .catch(() => {})
-      .finally(() => setRegisteredAgentsOnlyLoading(false));
+    if (hasMinRole(getUserRole(), "super_admin")) {
+      admin.getRegisteredAgentsOnly()
+        .then((res) => setRegisteredAgentsOnly(res.registered_agents_only))
+        .catch(() => {})
+        .finally(() => setRegisteredAgentsOnlyLoading(false));
+    } else {
+      setRegisteredAgentsOnlyLoading(false);
+    }
   }, []);
 
   const handleTracePrivacyToggle = useCallback(async (checked: boolean) => {
@@ -364,7 +368,8 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Registered Agents Only */}
+        {/* Registered Agents Only — super_admin only */}
+        {hasMinRole(getUserRole(), "super_admin") && (
         <section className="animate-in">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
             <Shield className="h-3.5 w-3.5" />
@@ -387,6 +392,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </section>
+        )}
 
         {isLoading ? (
           <TableSkeleton rows={5} cols={2} />
