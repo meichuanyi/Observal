@@ -254,12 +254,23 @@ def delete(path: str) -> dict:
 def get_registered_agents_only() -> bool:
     """Check if the org has registered-agents-only mode enabled.
 
-    Returns False on any error (fail-open).
+    Returns False on any error (fail-open, silent — no printed messages).
     """
     try:
-        resp = get("/api/v1/admin/org/registered-agents-only")
-        return resp.get("registered_agents_only", False)
-    except (SystemExit, Exception):
+        cfg = config.load()
+        server_url = cfg.get("server_url", "").rstrip("/")
+        token = cfg.get("access_token", "")
+        if not server_url or not token:
+            return False
+        r = httpx.get(
+            f"{server_url}/api/v1/admin/org/registered-agents-only",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=5,
+        )
+        if r.status_code == 200:
+            return r.json().get("registered_agents_only", False)
+        return False
+    except Exception:
         return False
 
 
