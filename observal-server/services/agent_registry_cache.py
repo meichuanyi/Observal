@@ -35,9 +35,7 @@ async def _refresh_all() -> None:
     try:
         async with async_session() as session:
             # 1. Refresh org toggle settings
-            result = await session.execute(
-                select(Organization.id, Organization.registered_agents_only)
-            )
+            result = await session.execute(select(Organization.id, Organization.registered_agents_only))
             new_toggle: dict[uuid.UUID, bool] = {}
             for org_id, enabled in result.all():
                 new_toggle[org_id] = enabled

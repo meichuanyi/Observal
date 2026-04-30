@@ -1135,9 +1135,7 @@ def _install_kiro_hooks(server_url: str) -> tuple[list[str], bool]:
     if registered_agents_only:
         registered_agents = obs_client.get_registered_agent_names()
         # Filter agent files to only registered ones (skip silently)
-        eligible_files = [
-            af for af in agent_files if af.stem != "kiro_default" and af.stem in registered_agents
-        ]
+        eligible_files = [af for af in agent_files if af.stem != "kiro_default" and af.stem in registered_agents]
         if not eligible_files:
             skipped_count = sum(1 for af in agent_files if af.stem != "kiro_default")
             if skipped_count:

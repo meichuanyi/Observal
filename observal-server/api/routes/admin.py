@@ -922,9 +922,7 @@ async def get_registered_agents_only(
     if not org:
         await audit(current_user, "admin.registered_agents_only.view", "registered_agents_only")
         return {"registered_agents_only": False}
-    await audit(
-        current_user, "admin.registered_agents_only.view", "registered_agents_only", resource_id=str(org.id)
-    )
+    await audit(current_user, "admin.registered_agents_only.view", "registered_agents_only", resource_id=str(org.id))
     return {"registered_agents_only": org.registered_agents_only}
 
 
